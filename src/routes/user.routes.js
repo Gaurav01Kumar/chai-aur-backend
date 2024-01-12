@@ -5,6 +5,9 @@ import {
   logoutUser,
   refreshAccessToken,
   registerUser,
+  updateAccountDetails,
+  updateUserAvatar,
+  updateUserCoverImage,
 } from "../controllers/user.controller.js";
 import { verifyJWT } from "../middleware/auth.middleware.js";
 const router = Router();
@@ -21,4 +24,21 @@ router.route("/login").post(loginUser);
 
 router.route("/logout").post(verifyJWT, logoutUser);
 router.route("/refresToken").post(refreshAccessToken);
+
+router.route("/update-user-details").put(verifyJWT, updateAccountDetails);
+router
+  .route("/update-user-avatar")
+  .put(
+    upload.single([{ name: "avatar", maxCount: 1 }]),
+    verifyJWT,
+    updateUserAvatar
+  );
+router
+  .route("/update-user-coverImage")
+  .put(
+    upload.single([{ name: "coverImage", maxCount: 1 }]),
+    verifyJWT,
+    updateUserCoverImage
+  );
+
 export default router;
