@@ -1,6 +1,10 @@
 import { Router } from "express";
 import { upload } from "../middleware/multer.middleware.js";
 import {
+  changeCurrentPassword,
+  getCurrentUser,
+  getUserChanelProfile,
+  getWatchHistory,
   loginUser,
   logoutUser,
   refreshAccessToken,
@@ -25,20 +29,17 @@ router.route("/login").post(loginUser);
 router.route("/logout").post(verifyJWT, logoutUser);
 router.route("/refresToken").post(refreshAccessToken);
 
-router.route("/update-user-details").put(verifyJWT, updateAccountDetails);
+router.route("/update-details").patch(verifyJWT, updateAccountDetails);
 router
-  .route("/update-user-avatar")
-  .put(
-    upload.single([{ name: "avatar", maxCount: 1 }]),
-    verifyJWT,
-    updateUserAvatar
-  );
+  .route("/update-avatar")
+  .patch(verifyJWT, upload.single("avatar"), updateUserAvatar);
 router
-  .route("/update-user-coverImage")
-  .put(
-    upload.single([{ name: "coverImage", maxCount: 1 }]),
-    verifyJWT,
-    updateUserCoverImage
-  );
+  .route("/update-coverImage")
+  .patch(verifyJWT, upload.single("coverImage"), updateUserCoverImage);
+
+router.route("/change-password").post(verifyJWT, changeCurrentPassword);
+router.route("/current-user").post(verifyJWT, getCurrentUser);
+router.route("/watch-history").get(verifyJWT, getWatchHistory);
+router.route("/c/:username").get(verifyJWT, getUserChanelProfile);
 
 export default router;
