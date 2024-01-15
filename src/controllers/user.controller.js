@@ -4,6 +4,8 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { User } from "../models/user.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
+
 const generateAccessAndRefreshTokens = async (userId) => {
   try {
     const user = await User.findOne(userId);
@@ -340,15 +342,68 @@ const getUserChanelProfile = asyncHandler(async (req, res) => {
       },
     },
   ]);
-  console.log("aggreation return value ",chanel)
-  if(!chanel?.length){
-    throw new ApiError(404,"Channell doest not exists")
+  console.log("aggreation return value ", chanel);
+  if (!chanel?.length) {
+    throw new ApiError(404, "Channell doest not exists");
   }
   return res
-  .status(200)
-  .json(
-    new ApiResponse(200,chanel[0],"user chanel fetched successfully")
-  )
+    .status(200)
+    .json(new ApiResponse(200, chanel[0], "user chanel fetched successfully"));
+});
+
+const getWatchHistory = asyncHandler(async (req, res) => {
+  //req.user._id;
+  const user = await User.aggregate([
+    {
+      $match: {
+        _id: new mongoose.Types.ObjectId(req.user_id),
+      },
+    },
+    {
+      $lookup: {
+        from: "videos",
+        localField: "watchHistory",
+        foreignField: "_id",
+        as: "watchHistory",
+        pipeline: [
+          {
+            $lookup: {
+              from: "users",
+              localField: "owner",
+              foreignField: "_id",
+              as: "owner",
+              pipeline: [
+                {
+                  $project: {
+                    fullName: 1,
+                    username: 1,
+                    avtar: 1,
+                  },
+                },
+              ],
+            },
+          },
+          {
+            $addFields: {
+              owner: {
+                $first: "$owner",
+              },
+            },
+          },
+        ],
+      },
+    },
+  ]);
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        user[0].watchHistory,
+        "watch history fetch successfully"
+      )
+    );
 });
 
 export {
@@ -362,4 +417,5 @@ export {
   updateUserAvatar,
   updateUserCoverImage,
   getUserChanelProfile,
+  getWatchHistory,
 };
