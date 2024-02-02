@@ -127,4 +127,4 @@ const deleteVideos = asyncHandler(async (req, res) => {
   }
 });
 
-export { uploadVideo, getAllVideo };
+export { uploadVideo, getAllVideo,deleteVideos };
