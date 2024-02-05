@@ -111,7 +111,7 @@ const getAllVideo = asyncHandler(async (req, res) => {
 const deleteVideos = asyncHandler(async (req, res) => {
   try {
     const videoId = req.params;
-    
+
     const isVideoDeleted = await Video.findOneAndDelete({ _id: videoId });
     if (!isVideoDeleted) {
       throw new ApiError(409, "Your video Deteltion failed ");
@@ -127,6 +127,67 @@ const deleteVideos = asyncHandler(async (req, res) => {
   }
 });
 
+const updateVideoDetails = asyncHandler(async (req, res) => {
+  try {
+    const { title, description } = req.body;
+    const { videoId } = req.params;
+    if (!title || !description) {
+      throw new ApiError(400, "All fields are required");
+    }
+    const video = await Video.findByIdAndUpdate(
+      { _id: videoId, owner: req.user?._id },
+      {
+        $set: {
+          title,
+          description,
+        },
+      },
+      {
+        new: true,
+      }
+    );
+    return res
+      .status(200)
+      .json(new ApiResponse(200, video, "video details is updated "));
+  } catch (error) {
+    throw new ApiError(500, "Something went wrong , Server error ");
+  }
+});
+
+const getVideoBySerach = asyncHandler(async (req, res) => {
+  const { searchText } = req.params;
+  if (!searchText) {
+    return getAllVideo();
+  }
+  const searchedVideo = await Video.aggregate([
+    {
+      $match: {
+        title: searchText,
+      },
+    },
+    {
+      $lookup: {
+        from: "users",
+        localField: "owner",
+        foreignField: "_id",
+        as: "owner",
+      },
+    },
+  ]);
+  if (!searchedVideo?.length) {
+    throw new ApiError(200, "Videos not founds");
+  }
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        searchedVideo[0],
+        "searched video fetched successfully"
+      )
+    );
+});
 
 
-export { uploadVideo, getAllVideo,deleteVideos };
+
+export { uploadVideo, getAllVideo,getSignleVideo, deleteVideos, updateVideoDetails ,getVideoBySerach};
